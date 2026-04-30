@@ -1,3 +1,7 @@
+// Luis Alejandro Hernández Márquez - 241424
+// Sistemas y tecnologías web - Laboratorio 4 
+// Prof: Ludwing Cano
+
 import express from "express";
 import crypto from "crypto";
 
@@ -7,7 +11,7 @@ const PORT = 3000;
 // Middleware
 app.use(express.json());
 
-// Datos (base en memoria)
+// Datos de base en memoria
 let canciones = [
   {
     id: crypto.randomUUID(),
@@ -71,7 +75,7 @@ app.get("/info", (req, res) => {
 });
 
 app.get("/saludo", (req, res) => {
-  res.send("¡Hola! Bienvenido a la API de canciones");
+  res.send("Hola Bienvenido a la API de canciones");
 });
 
 app.get("/api/status", (req, res) => {
@@ -88,17 +92,31 @@ app.get("/api/status", (req, res) => {
 
 //  GET todas las canciones
 app.get("/api/canciones", (req, res) => {
+  const { genero, artista } = req.query;
+
+  let resultado = canciones;
+
+  if (genero) {
+    resultado = resultado.filter(c =>
+      c.genero.toLowerCase() === genero.toLowerCase()
+    );
+  }
+
+  if (artista) {
+    resultado = resultado.filter(c =>
+      c.artista.toLowerCase() === artista.toLowerCase()
+    );
+  }
+
   res.status(200).json({
     ok: true,
-    data: canciones
+    data: resultado
   });
 });
 
 // GET canción por ID
 app.get("/api/canciones/:id", (req, res) => {
-  const id = req.params.id;
-
-  const cancion = canciones.find(c => c.id === id);
+  const cancion = canciones.find(c => c.id === req.params.id);
 
   if (!cancion) {
     return res.status(404).json({
@@ -107,7 +125,7 @@ app.get("/api/canciones/:id", (req, res) => {
     });
   }
 
-  res.status(200).json({
+  res.json({
     ok: true,
     data: cancion
   });
@@ -143,9 +161,7 @@ app.post("/api/canciones", (req, res) => {
 
 // PUT
 app.put("/api/canciones/:id", (req, res) => {
-  const id = req.params.id;
-
-  const index = canciones.findIndex(c => c.id === id);
+  const index = canciones.findIndex(c => c.id === req.params.id);
 
   if (index === -1) {
     return res.status(404).json({
@@ -171,7 +187,7 @@ app.put("/api/canciones/:id", (req, res) => {
     duracion,
     anio
   };
-
+   
   canciones[index] = actualizada;
 
   res.json({
@@ -180,11 +196,10 @@ app.put("/api/canciones/:id", (req, res) => {
   });
 });
 
+
 // PATCH
 app.patch("/api/canciones/:id", (req, res) => {
-  const id = req.params.id;
-
-  const cancion = canciones.find(c => c.id === id);
+  const cancion = canciones.find(c => c.id === req.params.id);
 
   if (!cancion) {
     return res.status(404).json({
@@ -203,9 +218,7 @@ app.patch("/api/canciones/:id", (req, res) => {
 
 // DELETE
 app.delete("/api/canciones/:id", (req, res) => {
-  const id = req.params.id;
-
-  const index = canciones.findIndex(c => c.id === id);
+  const index = canciones.findIndex(c => c.id === req.params.id);
 
   if (index === -1) {
     return res.status(404).json({
@@ -219,6 +232,17 @@ app.delete("/api/canciones/:id", (req, res) => {
   res.json({
     ok: true,
     mensaje: "Canción eliminada correctamente"
+  });
+});
+
+// error 404
+app.use((req, res) => {
+  res.status(404).json({
+    ok: false,
+    error: "Ruta no encontrada",
+    ruta: req.originalUrl,
+    metodo: req.method,
+    sugerencia: "Visita / para ver los endpoints disponibles"
   });
 });
 
